@@ -796,7 +796,7 @@ if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
 	scan_btclassic="true"
 	scan_infrepeat=1
 	scan_mute="false"
-	scan_debug="true"
+	scan_debug="false"
 	scan_privacy=0
 	# DONE = SET HERE - Custom config for quick scans
 	
