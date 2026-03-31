@@ -59,7 +59,6 @@ declare -A BT_COMPS
 
 # ---- DEFAULTS ----
 scan_default="false"
-scan_btstart="false"
 scan_btle="false"
 scan_btclassic="false"
 scan_infrepeat=0
@@ -684,21 +683,6 @@ device_hunter() {
 				RINGTONE "sideBeam" # (short)
 			fi
 		fi
-		# RINGTONE "bonus"
-		# LOZSecret
-		# compute
-		# chirpy
-		# flutter
-		# eternally (longer)
-		# ff7_boss (longer)
-		# funky (med)
-		# glitchHack
-		# hak_bleep (med)
-		# knightRider (longer)
-		# ==== errors ====
-		# sideBeam
-		# wahWah
-		# pushwall
 		
 		LOG blue   "------------ ${founditems} signals found -------------"
 		printf "%s bluetooth signals found\n" "${founditems}" >> "$REPORT_FILE"
@@ -706,10 +690,6 @@ device_hunter() {
 		# LOG blue "-------------------------------------------"
 		LOG cyan   "|- Signal -| -- MAC Address -- - Name/Manuf"
 		
-		
-		# printf "════════════════════════════════════════════\n" >> "$REPORT_FILE"
-		# printf "|- Signal -| -- MAC Address -- - Name/Manuf\n" >> "$REPORT_FILE"
-		# printf "════════════════════════════════════════════\n" >> "$REPORT_FILE"
 		printf "%s - EVENT: Finish scan\n" $(date +"%Y-%m-%d_%H%M%S") >> "$REPORT_FILE"
 			
 		if [[ "$scan_infrepeat" -eq 0 ]] ; then
@@ -725,19 +705,11 @@ device_hunter() {
 		# LOG green "Press OK to scan again..."
 		# exit after 1 loop for testing
 		# LOG "exit for testing"; exit 0
-		
 	done
 	killall hcitool 2>/dev/null
 	killall btmon 2>/dev/null
 }
 
-# LOG blue "================================================="
-# LOG cyan "========= Bluetooth Device Hunter Scan =========="
-# LOG magenta "================= Classic + LE =================="
-# LOG "============ Signal Strength Tracker ============"
-# LOG blue "================================================="
-# LOG cyan "================ by cncartist ==================="
-# LOG blue "================================================="
 LED GREEN
 
 LOG blue      "|||||||||||||||||||||||||||||||||||||||||||||||"
@@ -766,7 +738,6 @@ WAIT_FOR_BUTTON_PRESS A
 # External Bluetooth Adapter?
 resp=$(CONFIRMATION_DIALOG "Do you have USB/External Bluetooth enabled & plugged in?")
 if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
-	#LOG "User CONFIRMED"
 	if hciconfig | grep -q hci1; then
 		BLE_IFACE="hci1"
 		LOG green "USB Bluetooth found!"
@@ -787,7 +758,6 @@ fi
 # Confirm Default Scan Settings
 resp=$(CONFIRMATION_DIALOG "Use Default Settings?  If not, the next questions will allow scan customization.")
 if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
-	#LOG "User CONFIRMED"
 	scan_default="true"
 	
 	# START = SET HERE - Custom config for quick scans
@@ -901,11 +871,6 @@ fi
 # Confirm Scan
 resp=$(CONFIRMATION_DIALOG "Start scan for Bluetooth?")
 if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
-	#LOG "User CONFIRMED"
-	scan_btstart="true"
-fi
-
-if [ "$scan_btstart" = "true" ]; then
 	device_hunter
 else
 	LOG "Skipped Bluetooth Scan."
