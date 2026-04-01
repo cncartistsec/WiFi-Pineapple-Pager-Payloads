@@ -422,7 +422,6 @@ device_hunter() {
 					# if [[ -n "$mac" ]] && [[ "$mac" != "00:00:00:00:00:00" ]]; then
 					if [[ -n "$mac" ]]; then
 						# Parse Name/Data
-						# name=$((echo "${info[0]}" | grep -oP '(?<=Name ).*' || echo "Unknown") | cut -d' ' -f2)
 						name=$(echo "${info[0]}" | grep -oP '(?<=Name ).*' || echo "Unknown")
 						if [[ "$name" == "Unknown" ]] ; then
 							name=$(echo "${info[1]}" | grep -oP '(?<=Name ).*' || echo "Unknown")
@@ -462,14 +461,9 @@ device_hunter() {
 						comp="${comp% *\(*}"
 						# trim var
 						comp=$(echo "$comp" | sed -e 's/^[[:space:]]*//' -e 's/[[:space:]]*$//')
-						if [[ -z "$comp" ]] || [[ "$comp" == "not assigned" ]] || [[ "$comp" == "Unknown" ]] || [[ "$comp" == "Device Information" ]] ; then
+						if [[ -z "$comp" || "$comp" == "not assigned" || "$comp" == "Unknown" || "$comp" == "Device Information" ]] ; then
 							comp="n/a"
 						fi
-						# bulb - Leedarson IoT Technology Inc.
-						if [[ "$mac" =~ "1C:D6:BD:" ]] && [[ "$comp" == "n/a" ]] ; then
-							comp="Leedarson"
-						fi
-						# LOG "comp2: ${comp}"
 						
 						namecheck="${BT_NAMES[$mac]}"
 						# LOG "namecheck: ${namecheck}"
@@ -478,7 +472,7 @@ device_hunter() {
 							# LOG "namecheck"
 							# check vs current name
 							# if name not equal current name
-							if [[ "$namecheck" != "$name" ]] && [[ "$name" != "Unknown" ]]; then
+							if [[ "$namecheck" != "$name" && "$name" != "Unknown" ]]; then
 								# then set name string to new text
 								BT_NAMES[$mac]="$name"
 								# LOG red "override name"
@@ -495,7 +489,7 @@ device_hunter() {
 							# LOG "compcheck"
 							# check vs current comp
 							# if comp not equal current company or service data
-							if [[ "$compcheck" != "$comp" ]] && [[ "$comp" != "n/a" ]]; then
+							if [[ "$compcheck" != "$comp" && "$comp" != "n/a" ]]; then
 								# then set comp string to new text
 								BT_COMPS[$mac]="$comp"
 							fi
@@ -547,7 +541,7 @@ device_hunter() {
 			
 			# if BT_RSSIS[$mac] is empty, tell user no signals found
 			if [ ${#BT_RSSIS[@]} -eq 0 ]; then
-				if [[ "$scan_btclassic" == "true" ]] && [[ "$scan_btle" == "true" ]] ; then
+				if [[ "$scan_btclassic" == "true" && "$scan_btle" == "true" ]] ; then
 					LOG "No Classic or LE Bluetooth signals found..."
 					printf "No Classic or LE Bluetooth signals found...\n" >> "$REPORT_FILE"
 				else 
@@ -635,10 +629,6 @@ device_hunter() {
 					[1-9]) # Matches 9-1
 						rssitxt="${rssi}*********"
 						;;
-					# 999)
-					# 	rssitxt="_______999"
-					# 	# LOG "Invalid input ${rssi} ${mac}"
-					# 	;;
 					*)
 						rssitxt="__________"
 						# LOG "Invalid input ${rssi} ${mac}"
@@ -646,7 +636,10 @@ device_hunter() {
 				esac
 				printf "|%s| %s - %s%s RSSI: %s\n" "${rssitxt}" "${mac}" "${name}" "${comp}" "${rssi}" >> "$REPORT_FILE"
 				if [[ "$scan_privacy" -eq 1 ]] ; then mac="${mac:0:2}:░░:░░:░░:░░:░░"; name="$priv_name_txt"; comp=""; fi
-				LOG "|${rssitxt}| ${mac} - ${name}${comp}"
+				# edit name for length over pager screen
+				name="${name}${comp}"; length=${#name}; if [[ "$length" -gt 17 ]] ; then name="${name:0:15}.."; fi
+				LOG "|${rssitxt}| ${mac} - ${name}"
+				# LOG magenta "|__________| ░░:░░:░░:░░:░░:░░ - REALLY LONG LONG NAME"
 			done < <(
 				for key in "${!BT_RSSIS[@]}"; do
 					echo "${BT_RSSIS[$key]} $key"
@@ -654,11 +647,6 @@ device_hunter() {
 			)
 			# sort -rn for descending, sort -n for ascending
 			# LOG "DONE re-order"
-			
-			#    |__________| 00:00:44:00:00:00 - Unknown n/a
-			
-			# LOG "|- Signal -| -- MAC Address -- - Name/Manuf"
-			# LOG "-------------------------------------------"
 			
 		else
 			if [[ "$scan_btclassic" == "true" ]] && [[ "$scan_btle" == "true" ]] ; then
