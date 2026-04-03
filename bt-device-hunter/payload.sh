@@ -9,6 +9,18 @@
 # Incident Response Forensic Collector - Author: curtthecoder - (logging example)
 # 
 # ================================================
+# Includes: 
+# ================================================
+#  -- Bluetooth Device Hunter (Classic + LE combined or separate).
+#  -- -- -- RSSI meter for each found signal, best signal showing at the bottom of the screen.
+#  -- -- -- Custom configuration allowed and data builds over time in case name or manufacturer is missed on first scans.
+#  -- -- -- Verbose logging / debugging available.
+#  -- Privacy / Streamer Mode:
+#  -- -- -- (obscures MAC + Targets/Device Names) allows full functionality while obscuring ALL identifying information on screen.
+#  -- Debug Mode:
+#  -- -- -- Saves full data stream for each Bluetooth scan at multiple points.  Please be aware these files can add up over time and it's best to clear them out or turn off debugging mode if not actively using them for debugging.
+# 
+# ================================================
 #               LED STATUS
 # ================================================
 #             ------ start ------
@@ -30,12 +42,18 @@
 # ================================================
 # Notes:
 # ================================================
-#  -- Bluetooth: If you boot up the pager with the USB bluetooth plugged in, it may reverse the hci addressing.
-#  -- -- -- -- - Please boot the pager WITHOUT the USB device connected for hci0 to be addressed as the first default device.
-#  -- Debug / Logging: With debug enabled, the log files will add up quickly over time in filesize.
+#  -- Device Hunter Scan: 
+#  -- -- -- Press back to close out the payload
+#  -- -- -- If locating a specific item, sometimes it's best to get multiple scans in close proximity to confirm the strength is accurate.
+#  -- -- -- Using an external USB CSR8510 / CSR v4.0 Bluetooth Adapter, you can achieve better sensitivity and range.
+#  -- -- -- The best way to get used to the sensitivity is to scan for known devices and locate them within close range to see the sensitivity received.
+#  -- -- -- There are many factors in Bluetooth sensitivity; walls & windows bounce or weaken signal, desks/objects can weaken signal, orientation of the pager can matter, and signals can look weak until you get closer to the actual source/Bluetooth chip on the target device. 
+#  -- Bluetooth: 
+#  -- -- -- If you boot up the pager with USB bluetooth plugged in, it may reverse the hci addressing.
+#  -- -- -- -- - Please boot the pager WITHOUT a USB device connected for hci0 to be addressed as the first default device.
+#  -- Debug / Logging: 
+#  -- -- -- With debug enabled, log files will add up quickly over time in filesize.
 #  -- -- -- -- - Please take care to only debug when needed; it keeps full BT scan LOG files which take significant space.
-# 
-# ================================================
 # 
 
 # ---- CONFIG ----
@@ -68,6 +86,7 @@ cancel_press=0
 cancel_app=0
 scan_privacy=0
 priv_name_txt="-+ Name Hidden +-"
+rssitxt_switch="rssitxtsw_hci0"
 
 # ---- REGEX ----
 VALID_MAC="([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
@@ -119,6 +138,111 @@ reset_bt_adapter() {
 	done
 }
 
+# switch text based on device
+# rssi scale works, but with built in BT (hci0) we want better visual feedback
+# an extra * to adjust for less sensitivity on built in BT (hci0)
+rssitxtsw_hci0() {
+	case "$rssi" in
+		1[0-2][0-9]|130)   # Matches 100-130
+			rssitxt="_______${rssi}"
+			# LOG "MATCH ${rssi} ${mac}"
+			;;
+		9[1-9])   # Matches 91-99
+			rssitxt="*_______${rssi}"
+			# LOG "MATCH ${rssi} ${mac}"
+			;;
+		90|[8][6-9])       # Matches 86-90
+			rssitxt="**______${rssi}"
+			;;
+		[8][0-5])       # Matches 80-85
+			rssitxt="${rssi}*_______"
+			;;
+		[7][4-9])       # Matches 74-79
+			rssitxt="${rssi}**______"
+			;;
+		[7][0-3]|[6][8-9])       # Matches 68-73
+			rssitxt="${rssi}***_____"
+			;;
+		[6][2-7])       # Matches 62-67
+			rssitxt="${rssi}****____"
+			;;
+		[6][0-1]|[5][6-9])       # Matches 56-61
+			rssitxt="${rssi}*****___"
+			;;
+		[5][0-5])       # Matches 50-55
+			rssitxt="${rssi}******__"
+			;;
+		[4][4-9])       # Matches 44-49
+			rssitxt="${rssi}*******_"
+			;;
+		[4][0-3]|[3][8-9])       # Matches 38-43
+			rssitxt="${rssi}********"
+			;;
+		[12][0-9]|3[0-7]) # Matches 37-10
+			rssitxt="${rssi}********"
+			;;
+		[1-9]) # Matches 9-1
+			rssitxt="${rssi}*********"
+			;;
+		*)
+			rssitxt="__________"
+			# LOG "Invalid input ${rssi} ${mac}"
+			;;
+	esac
+}
+# switch text based on device
+# with a usb adapter we acheive 5-10dBm better on average
+rssitxtsw_hci1() {
+	case "$rssi" in
+		1[0-2][0-9]|130)   # Matches 100-130
+			rssitxt="_______${rssi}"
+			# LOG "MATCH ${rssi} ${mac}"
+			;;
+		9[1-9])   # Matches 91-99
+			rssitxt="________${rssi}"
+			# LOG "MATCH ${rssi} ${mac}"
+			;;
+		90|[8][6-9])       # Matches 86-90
+			rssitxt="*_______${rssi}"
+			;;
+		[8][0-5])       # Matches 80-85
+			rssitxt="**______${rssi}"
+			;;
+		[7][4-9])       # Matches 74-79
+			rssitxt="${rssi}*_______"
+			;;
+		[7][0-3]|[6][8-9])       # Matches 68-73
+			rssitxt="${rssi}**______"
+			;;
+		[6][2-7])       # Matches 62-67
+			rssitxt="${rssi}***_____"
+			;;
+		[6][0-1]|[5][6-9])       # Matches 56-61
+			rssitxt="${rssi}****____"
+			;;
+		[5][0-5])       # Matches 50-55
+			rssitxt="${rssi}*****___"
+			;;
+		[4][4-9])       # Matches 44-49
+			rssitxt="${rssi}******__"
+			;;
+		[4][0-3]|[3][8-9])       # Matches 38-43
+			rssitxt="${rssi}*******_"
+			;;
+		[12][0-9]|3[0-7]) # Matches 37-10
+			rssitxt="${rssi}********"
+			;;
+		[1-9]) # Matches 9-1
+			rssitxt="${rssi}*********"
+			;;
+		*)
+			rssitxt="__________"
+			# LOG "Invalid input ${rssi} ${mac}"
+			;;
+	esac
+}
+
+
 # device hunter function
 device_hunter() {
 	local scannumber=0
@@ -143,7 +267,7 @@ device_hunter() {
 		LOG magenta "DEBUG mode / extra logging ACTIVATED"
 		LOG " "
 	fi
-	if [[ "$scan_btclassic" == "true" ]] && [[ "$scan_btle" == "true" ]] ; then
+	if [[ "$scan_btclassic" == "true" && "$scan_btle" == "true" ]] ; then
 		LOG green "Scanning Classic + LE Bluetooth for ${DATA_SCAN_SECONDS}s each."
 		printf "Scanning Classic + LE Bluetooth for %s seconds each.\n" "${DATA_SCAN_SECONDS}" >> "$REPORT_FILE"
 	else 
@@ -274,7 +398,7 @@ device_hunter() {
 				if mac=$(echo "${line}" | grep -oE '([0-9A-F]{2}:){5}[0-9A-F]{2}'); then
 					# LOG "mac: ${mac}"
 					# keeping enough groups to get "sweet spot" of data collection
-					# too many to keep makes file to process to large
+					# too many to keep makes file to process too large
 					# too little means likely missed data
 					
 					awk -v pattern="Address: $mac" '
@@ -343,6 +467,7 @@ device_hunter() {
 			s/IBM Corp./IBM/; 
 			s/Icon Health and Fitness/iFIT/; 
 			s/iRobot Corporation/iRobot/; 
+			s/KiteSpring Inc./KiteSpring/; 
 			s/Klipsch Group, Inc./Klipsch/; 
 			s/LG Electronics/LG/; 
 			s/\[LG\] webOS TV/LG webOSTV/; 
@@ -375,6 +500,7 @@ device_hunter() {
 			s/Sonos Inc/Sonos/; 
 			s/Sony Corporation/Sony/; 
 			s/Spectrum Brands, Inc./Spectrum/; 
+			s/Swirl Networks, Inc./Swirl Networks/; 
 			s/SZ DJI TECHNOLOGY CO.,LTD/DJI/; 
 			s/TASER International, Inc./TASER/; 
 			s/Telink Semiconductor Co. Ltd/Telink/; 
@@ -391,8 +517,9 @@ device_hunter() {
 			s/Qingdao Yeelink Information Technology Co., Ltd./Yeelink/; 
 			s/Zhuhai Jieli technology Co.,Ltd/Zhuhai/; 
 			' "$DATASTREAMBT_FILE"
-			# 
 			
+			# 
+			# 
 			# add extra lines to separate addresses
 			sed -i 's/Address:/\n\n\nAddress:/' "$DATASTREAMBT_FILE"
 			# add extra lines at end of file
@@ -540,7 +667,7 @@ device_hunter() {
 			done < "$DATASTREAMBT_FILE"
 			
 			# if BT_RSSIS[$mac] is empty, tell user no signals found
-			if [ ${#BT_RSSIS[@]} -eq 0 ]; then
+			if [[ "${#BT_RSSIS[@]}" -eq 0 ]] ; then
 				if [[ "$scan_btclassic" == "true" && "$scan_btle" == "true" ]] ; then
 					LOG "No Classic or LE Bluetooth signals found..."
 					printf "No Classic or LE Bluetooth signals found...\n" >> "$REPORT_FILE"
@@ -587,53 +714,8 @@ device_hunter() {
 					fi
 				fi
 				# LOG "${rssi} ${mac} ${name}"
-				case $rssi in
-					1[0-2][0-9]|130)   # Matches 100-130
-						rssitxt="_______${rssi}"
-						# LOG "MATCH ${rssi} ${mac}"
-						;;
-					9[1-9])   # Matches 91-99
-						rssitxt="________${rssi}"
-						# LOG "MATCH ${rssi} ${mac}"
-						;;
-					90|[8][6-9])       # Matches 86-90
-						rssitxt="*_______${rssi}"
-						;;
-					[8][0-5])       # Matches 80-85
-						rssitxt="**______${rssi}"
-						;;
-					[7][4-9])       # Matches 74-79
-						rssitxt="${rssi}*_______"
-						;;
-					[7][0-3]|[6][8-9])       # Matches 68-73
-						rssitxt="${rssi}**______"
-						;;
-					[6][2-7])       # Matches 62-67
-						rssitxt="${rssi}***_____"
-						;;
-					[6][0-1]|[5][6-9])       # Matches 56-61
-						rssitxt="${rssi}****____"
-						;;
-					[5][0-5])       # Matches 50-55
-						rssitxt="${rssi}*****___"
-						;;
-					[4][4-9])       # Matches 44-49
-						rssitxt="${rssi}******__"
-						;;
-					[4][0-3]|[3][8-9])       # Matches 38-43
-						rssitxt="${rssi}*******_"
-						;;
-					[12][0-9]|3[0-7]) # Matches 37-10
-						rssitxt="${rssi}********"
-						;;
-					[1-9]) # Matches 9-1
-						rssitxt="${rssi}*********"
-						;;
-					*)
-						rssitxt="__________"
-						# LOG "Invalid input ${rssi} ${mac}"
-						;;
-				esac
+				# run RSSI switcher
+				$rssitxt_switch
 				printf "|%s| %s - %s%s RSSI: %s\n" "${rssitxt}" "${mac}" "${name}" "${comp}" "${rssi}" >> "$REPORT_FILE"
 				if [[ "$scan_privacy" -eq 1 ]] ; then mac="${mac:0:2}:░░:░░:░░:░░:░░"; name="$priv_name_txt"; comp=""; fi
 				# edit name for length over pager screen
@@ -649,7 +731,7 @@ device_hunter() {
 			# LOG "DONE re-order"
 			
 		else
-			if [[ "$scan_btclassic" == "true" ]] && [[ "$scan_btle" == "true" ]] ; then
+			if [[ "$scan_btclassic" == "true" && "$scan_btle" == "true" ]] ; then
 				LOG "No Classic or LE Bluetooth signals found..."
 				printf "No Classic or LE Bluetooth signals found...\n" >> "$REPORT_FILE"
 			else 
@@ -740,6 +822,11 @@ if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
 		LOG " "
 		WAIT_FOR_BUTTON_PRESS A
 	fi
+	if [[ "$BLE_IFACE" == "hci0" ]]; then
+		rssitxt_switch="rssitxtsw_hci0"
+	else
+		rssitxt_switch="rssitxtsw_hci1"
+	fi
 fi
 
 
@@ -759,7 +846,7 @@ if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
 	# DONE = SET HERE - Custom config for quick scans
 	
 	LOG green "Default settings selected..."	
-	if [[ "$scan_btclassic" == "true" ]] && [[ "$scan_btle" == "true" ]] ; then
+	if [[ "$scan_btclassic" == "true" && "$scan_btle" == "true" ]] ; then
 		LOG cyan "Scanning Classic + LE Bluetooth for ${DATA_SCAN_SECONDS}s each"
 	else 
 		if [[ "$scan_btclassic" == "true" ]] ; then
@@ -801,7 +888,7 @@ fi
 sleep 0.5
 
 # configuration
-if [ "$scan_default" = "false" ]; then
+if [[ "$scan_default" == "false" ]] ; then
 	# ASK HOW MANY SECONDS TO SCAN - $DATA_SCAN_SECONDS
 	# Longer times = larger file
 	DATA_SCAN_SECONDS=$(NUMBER_PICKER "Scan duration (seconds):" $DATA_SCAN_SECONDS)
