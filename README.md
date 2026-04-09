@@ -1,4 +1,4 @@
-# WiFi-Pineapple-Pager-Payloads
+# WiFi Pineapple Pager Payloads
 Hak5 WiFi Pineapple Pager Payloads by cncartist
 
 # Bluetooth Device Hunter (bt-device-hunter)
