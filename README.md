@@ -1,4 +1,4 @@
-# WiFi Pineapple Pager Payloads
+# WiFi-Pineapple-Pager-Payloads
 Hak5 WiFi Pineapple Pager Payloads by cncartist
 
 # Bluetooth Device Hunter (bt-device-hunter)
@@ -7,14 +7,15 @@ Hak5 WiFi Pineapple Pager Payloads by cncartist
 Bluetooth Device Hunter (Classic + LE combined or separate).  Data builds over time in case name or manufacturer is missed on first scans.  Custom configuration allowed.  Verbose logging / debugging / mute / privacy mode available.
 
 
-# Handshake Cleaner (handshake-cleaner)
-Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
+
+# Bluetooth Config MAC USB (bt-cfg-tool-mac)
+Bluetooth MAC Address Changer for USB CSR8510 / CSR v4.0 Bluetooth Adapter.  Tool will act on hci1 by default and has been tested to work on various CSR8510 Bluetooth Adapters (range from $5-10).  Can also permanently change Alias/Name for specific MAC as an option, or restore the old name before change.  Boot the pager first before plugging in USB BT Adapter to ensure it gets hci1 instead of hci0.
 
 
-# Disable All Alerts (sys-cfg-alerts-off)
-![Disable All Alerts](images/ALERTS-off.jpg)
 
-Lists and Turns All Enabled Alerts Off.  Asks before turning off and shows count/names.
+# Bluetooth Config Discov/Name (bt-cfg-tool)
+Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can change both USB + Internal Settings.
+
 
 
 # USB Ducky / Flipper Scanner & Data Stream Capture (usb-ducky-flipper)
@@ -28,3 +29,14 @@ Outputs (ascii art + powershell):
 
 ![Output 2](images/USB%20ducky%20powershell%20output.PNG)
 
+
+
+# Disable All Alerts (sys-cfg-alerts-off)
+![Disable All Alerts](images/ALERTS-off.jpg)
+
+Lists and Turns All Enabled Alerts Off.  Asks before turning off and shows count/names.
+
+
+
+# Handshake Cleaner (handshake-cleaner)
+Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
