@@ -65,7 +65,7 @@ DATASTREAMBT_FILE="$LOOT_DIR/${TIMESTAMP}_DataBT.txt"
 DATASTREAMBT2_FILE="$LOOT_DIR/${TIMESTAMP}_DataBT2.txt"
 DATASTREAMBT3_FILE="$LOOT_DIR/${TIMESTAMP}_DataBT3.txt"
 DATASTREAMBTTMP_FILE="$LOOT_DIR/${TIMESTAMP}_DataBTTMP.txt"
-DATA_SCAN_SECONDS=5
+DATA_SCAN_SECONDS=7
 
 # ---- BLE ----
 BLE_IFACE="hci0"
@@ -104,17 +104,179 @@ cleanup() {
 trap cleanup EXIT SIGINT SIGTERM
 
 # Check for required tools
-if ! command -v hciconfig &> /dev/null; then
-    ERROR_DIALOG "hciconfig not installed"
-    LOG red "Install with: opkg update && opkg install bluez-utils"
-    exit 1
-fi
-if ! command -v btmon &> /dev/null; then
-    ERROR_DIALOG "btmon not installed"
-    LOG red "Install with: opkg update && opkg install bluez-utils-btmon"
-    exit 1
-fi
+check_dependencies() {
+	if ! command -v hciconfig &> /dev/null; then
+		ERROR_DIALOG "hciconfig not installed"
+		LOG red "Install with: opkg update && opkg install bluez-utils"
+		exit 1
+	fi
+	if ! command -v btmon &> /dev/null; then
+		ERROR_DIALOG "btmon not installed"
+		LOG red "Install with: opkg update && opkg install bluez-utils"
+		exit 1
+	fi
+	# ORIGINAL <root> grep -V
+	# grep: unrecognized option: V
+	# BusyBox v1.36.1 (2025-04-13 16:38:32 UTC) multi-call binary.
+	# 
+	# NEW <root> grep -V
+	# grep (GNU grep) 3.11
+	local grepCheck=0; local count=0; local limit=3; local substring="BusyBox v"; local substring2='grep (GNU grep)'
+	# check grep
+	while IFS= read -r line && [[ "$count" -lt "$limit" ]] ; do
+		# if [[ "$line" == *"$substring"* ]]; then
+			# LOG "Grep is original version"
+		# el
+		if [[ "$line" == *"$substring2"* ]]; then
+			# LOG "Grep is GNU version"
+			grepCheck=1
+		fi
+		count=$((count + 1))
+	done < <(
+		grep -V
+	)
+	if [[ "$grepCheck" -eq 0 ]] ; then
+		local dependText=""
+		# ask if they want to install now
+		# without grep the app will run but, device names will show as "Unknown"
+		if [[ "$grepCheck" -eq 0 ]]; then
+			dependText="GNU grep"
+		fi
+		resp=$(CONFIRMATION_DIALOG "Dependency not met!
+		
+		Required: $dependText
+		
+		Install automatically now?")
+		if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+			LOG blue  "================================================="
+			LOG "Starting package install..."
+			sleep 1
+			count=0
+			while [[ -f "/var/lock/opkg.lock" ]] && [[ "$count" -lt 3 ]] ; do
+				LOG red "Opkg currently locked by a process. Waiting..."
+				sleep 5
+				count=$((count + 1))
+			done
+			# Check WiFi Client Mode enabled
+			count=1 # Number of packets to send
+			timeout=3 # Seconds to wait for a response
+			if ping -c $count -w $timeout "8.8.8.8" > /dev/null 2>&1; then
+				LOG "Network connection is active..."
+				LOG "Running 'opkg update'"
+				LOG "Please wait..."
+				# opkg update && opkg install grep
+				if opkg update; then
+					LOG green "'opkg update' successful."
+					if [[ "$grepCheck" -eq 0 ]]; then
+						LOG "Installing GNU grep..."
+						LOG "Please wait..."
+						opkg install grep
+					fi
+					LOG green "Package installed!"
+				else
+					LOG red "'opkg update' failed. Check network..."
+				fi
+			else
+				LOG red "Network connection is down..."
+			fi
+			LOG blue  "================================================="
+		else
+			ERROR_DIALOG "Dependency not met:
+			
+			Required: $dependText not installed!"
+			LOG red   "===================================== CRITICAL =="
+			LOG red   "== Dependency not met: $dependText"
+			LOG red   "===================================== CRITICAL =="
+			LOG cyan "== Install with ->"
+			LOG "opkg update"
+			LOG "opkg install grep"
+			LOG blue  "================================================="
+			LOG cyan "== Or all in one command ->"
+			LOG "opkg update && opkg install grep"
+			LOG blue  "================================================="
+			sleep 1
+			exit 1
+		fi
+	fi
+}
 
+# Check for ringtones, optional install/copy
+check_ringtones() {
+	# Define source and destination directories
+	local DEST_DIR="/lib/pager/ringtones"
+	# Define the list of six files in an array
+	local FILES=("Achievement.rtttl" "glitchHack.rtttl" "sideBeam.rtttl")
+	local count=0; local DEST_PATH=""; local ringtone_file=""
+	# Loop through the files array
+	for FILE_NAME in "${FILES[@]}"; do
+		DEST_PATH="$DEST_DIR/$FILE_NAME"
+		# Check if the file exists in the destination directory
+		if [ ! -f "$DEST_PATH" ]; then
+			# LOG "File $FILE_NAME is missing in $DEST_DIR. Copying..."
+			count=$((count + 1))
+		fi
+	done
+	if [[ "$count" -gt 0 ]] ; then
+		LOG "Sound Effects / Ringtones missing..."
+		resp=$(CONFIRMATION_DIALOG "ALERT! 
+
+									$count Sound Effects / Ringtones are missing from your ringtone dir.
+		
+									Copy them to your pagers ringtone dir for an optimal experience?")
+		if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+			LOG "Copying Sound Effects / Ringtones..."
+			for FILE_NAME in "${FILES[@]}"; do
+				DEST_PATH="$DEST_DIR/$FILE_NAME"
+				# Check if the file exists in the destination directory
+				if [ ! -f "$DEST_PATH" ]; then
+					# Copy the file
+					# LOG "File $FILE_NAME is missing in $DEST_DIR. Copying..."
+					if [[ "$FILE_NAME" == "Achievement.rtttl" ]]; then
+						ringtone_file="Achievement:d=16,o=5,b=125:c6,e6,g6,c7,e7,g7"
+					elif [[ "$FILE_NAME" == "glitchHack.rtttl" ]]; then
+						ringtone_file="GlitchHack:d=16,o=5,b=285:c,g,c6,p,b,p,a,p,g,p,4c"
+					elif [[ "$FILE_NAME" == "sideBeam.rtttl" ]]; then
+						ringtone_file="SideBeam:d=16,o=5,b=565:b,f6,f6,b,f6,f6,b,f6,f6"
+					fi					
+					LOG "Copying ${FILE_NAME}..."
+					printf "%s\n" "$ringtone_file" > "$DEST_PATH"
+					# cp "$SOURCE_PATH" "$DEST_PATH" 2>/dev/null
+				fi
+			done
+			LOG green "Sound Effects / Ringtones Copied!"
+		else
+			LOG magenta "Skipped Copying Sound Effects / Ringtones..."
+		fi
+	fi
+}
+
+# restart bluetoothd if not running
+bluetoothd_check() {
+	# service bluetoothd restart
+	# service bluetoothd status
+	# not running
+	# /etc/bluetooth/keys/
+	# name coming from lsusb when bluetoothd not running
+	# nano /etc/hotplug.d/usb/10-tty-naming 
+	local loop=0
+	while true; do
+		# LOG red "in loop"
+		loop=$((loop + 1))
+		if service bluetoothd status | grep -q "not"; then
+			# echo "NOT RUNNING"
+			# echo "trying restart..."
+			service bluetoothd restart
+			sleep 1
+			if [[ "$loop" -eq 5 ]] ; then
+				# echo "== NOT RUNNING after $loop tries! ==="
+				break
+			fi
+		else
+			# echo "RUNNING!"
+			break
+		fi
+	done
+}
 
 # Reset Bluetooth adapter to prevent errors/hanging	
 reset_bt_adapter() {
@@ -288,8 +450,6 @@ device_hunter() {
 	LOG blue "-------------------------------------------"
 	
 	while true; do
-	
-		
 		scannumber=$((scannumber + 1))
 		reset_bt_adapter
 		
@@ -426,9 +586,7 @@ device_hunter() {
 			rm "$DATASTREAMBTTMP_FILE"
 			rm "$DATASTREAMBT2_FILE"
 			
-			LED YELLOW
-			
-			
+			LED YELLOW			
 			
 			# fix for reading too far ahead and skipping items # remove whitespace and tabs
 			sed -i -e 's/^[[:space:]]*//' -e '/^[[:space:]]*$/d' "$DATASTREAMBT_FILE"
@@ -440,6 +598,7 @@ device_hunter() {
 			s/Amazon.com Services, Inc.\./Amazon/; 
 			s/Amazon.com Services, Inc./Amazon/; 
 			s/Amazon.com Services, LLC (formerly Amazon Fulfillment Service)/Amazon/; 
+			s/AMICCOM Electronics Corporation/AMICCOM/; 
 			s/Android Bluedroid/Bluedroid/; 
 			s/Apple, Inc./Apple/; 
 			s/Aruba Networks/Aruba HP/; 
@@ -460,18 +619,21 @@ device_hunter() {
 			s/Hangzhou Tuya Information  Technology Co., Ltd/Tuya Smart/; 
 			s/Harman International Industries, Inc./Harman/; 
 			s/Harman International/Harman/; 
+			s/Hatch Baby, Inc./Hatch Baby/; 
 			s/Hewlett-Packard Company/HP/; 
 			s/HP Inc./HP/; 
 			s/HUAWEI Technologies Co., Ltd./HUAWEI/; 
 			s/Hubbell Lighting, Inc./Hubbell/; 
 			s/IBM Corp./IBM/; 
 			s/Icon Health and Fitness/iFIT/; 
+			s/InvisionHeart Inc./InvisionHeart/; 
 			s/iRobot Corporation/iRobot/; 
 			s/KiteSpring Inc./KiteSpring/; 
 			s/Klipsch Group, Inc./Klipsch/; 
 			s/LG Electronics/LG/; 
 			s/\[LG\] webOS TV/LG webOSTV/; 
 			s/Lippert Components, INC/Lippert/; 
+			s/LumiGeek LLC/LumiGeek/; 
 			s/Nest Labs Inc/Nest/; 
 			s/Nikon Corporation/Nikon/; 
 			s/Nintendo Co., Ltd./Nintendo/; 
@@ -500,6 +662,7 @@ device_hunter() {
 			s/Sonos Inc/Sonos/; 
 			s/Sony Corporation/Sony/; 
 			s/Spectrum Brands, Inc./Spectrum/; 
+			s/Surefire, LLC/Surefire/; 
 			s/Swirl Networks, Inc./Swirl Networks/; 
 			s/SZ DJI TECHNOLOGY CO.,LTD/DJI/; 
 			s/TASER International, Inc./TASER/; 
@@ -653,10 +816,7 @@ device_hunter() {
 						fi
 						# rssi=19
 						# LOG "MAC: ${mac} - rssi: ${rssi} - comp: ${comp} - sdata: ${sdata} - name: ${name}"
-						# Update rssi only if RSSI is better (keep best signal)
-						
-						
-						# Update rssi only if RSSI is better (keep best signal)						
+						# Update rssi only if RSSI is better (keep best signal)					
 						# ONLY if current is better than old value
 						if [[ "$rssicheck" -gt "$rssi" ]]; then
 							BT_RSSIS[$mac]="$rssi"
@@ -716,7 +876,7 @@ device_hunter() {
 				# LOG "${rssi} ${mac} ${name}"
 				# run RSSI switcher
 				$rssitxt_switch
-				printf "|%s| %s - %s%s RSSI: %s\n" "${rssitxt}" "${mac}" "${name}" "${comp}" "${rssi}" >> "$REPORT_FILE"
+				printf "|%s| %s - %s%s | RSSI: %s\n" "${rssitxt}" "${mac}" "${name}" "${comp}" "${rssi}" >> "$REPORT_FILE"
 				if [[ "$scan_privacy" -eq 1 ]] ; then mac="${mac:0:2}:░░:░░:░░:░░:░░"; name="$priv_name_txt"; comp=""; fi
 				# edit name for length over pager screen
 				name="${name}${comp}"; length=${#name}; if [[ "$length" -gt 17 ]] ; then name="${name:0:15}.."; fi
@@ -792,6 +952,10 @@ LOG cyan      "¨ ██████╔╝ ¨ ██║ ¨¨¨ Signal Strength T
 LOG cyan      "¨ ╚═════╝ ¨¨ ╚═╝ ¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨"
 LOG cyan      "||||||||||||||||||||||||| by cncartist ||||||||"
 LOG blue      "¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨¨"
+
+check_dependencies
+check_ringtones
+bluetoothd_check
 
 LOG "Bluetooth will scan, show names, manufacturers, and strengths; then allow re-scan."
 LOG " "
