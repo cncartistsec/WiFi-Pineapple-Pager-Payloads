@@ -7,6 +7,10 @@ Hak5 WiFi Pineapple Pager Payloads by cncartist
 Bluetooth Device Hunter (Classic + LE combined or separate).  Data builds over time in case name or manufacturer is missed on first scans.  Custom configuration allowed.  Verbose logging / debugging / mute / privacy mode available.
 
 
+# Handshake Cleaner (handshake-cleaner)
+Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
+
+
 # Disable All Alerts (sys-cfg-alerts-off)
 ![Disable All Alerts](images/ALERTS-off.jpg)
 
