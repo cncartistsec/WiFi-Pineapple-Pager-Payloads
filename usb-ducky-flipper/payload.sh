@@ -44,8 +44,6 @@ KEYCKTMP_FILE="$LOOT_DIR/KeyCKTMP.txt"
 DATA_SCAN_SECONDS=15
 
 # ---- DEFAULTS ----
-scan_duckyusb="false"
-scan_flipperusb="false"
 scan_foundevents="false"
 scan_decrypt="false"
 shift_pressed=0
@@ -82,11 +80,106 @@ cleanup() {
 trap cleanup EXIT SIGINT SIGTERM
 
 # Check for required tools
-if ! command -v evtest &> /dev/null; then
-    ERROR_DIALOG "evtest not installed"
-    LOG red "Install with: opkg update && opkg install evtest"
-    exit 1
-fi
+check_dependencies() {
+	# ORIGINAL <root> grep -V
+	# grep: unrecognized option: V
+	# BusyBox v1.36.1 (2025-04-13 16:38:32 UTC) multi-call binary.
+	# 
+	# NEW <root> grep -V
+	# grep (GNU grep) 3.11
+	local evtestCheck=0; local grepCheck=0; local count=0; local limit=3; local substring="BusyBox v"; local substring2='grep (GNU grep)'
+	# check evtest
+	if command -v evtest &> /dev/null; then
+		evtestCheck=1
+	fi
+	# check grep
+	while IFS= read -r line && [[ "$count" -lt "$limit" ]] ; do
+		if [[ "$line" == *"$substring2"* ]]; then
+			# LOG "Grep is GNU version"
+			grepCheck=1
+		fi
+		count=$((count + 1))
+	done < <(
+		grep -V
+	)
+	if [[ "$grepCheck" -eq 0 || "$evtestCheck" -eq 0 ]]; then
+		local dependText=""
+		# ask if they want to install now
+		if [[ "$grepCheck" -eq 0 ]]; then
+			dependText="GNU grep"
+		fi
+		if [[ "$evtestCheck" -eq 0 ]]; then
+			if [[ -n "$dependText" ]]; then
+				dependText="${dependText} & evtest"
+				# dependText="GNU grep & evtest"
+			else
+				dependText="evtest"
+			fi
+		fi
+		resp=$(CONFIRMATION_DIALOG "Dependency not met!
+		
+		Required: $dependText
+		
+		Install automatically now?")
+		if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+			LOG blue  "================================================="
+			LOG "Starting package install..."
+			sleep 1
+			count=0
+			while [[ -f "/var/lock/opkg.lock" ]] && [[ "$count" -lt 3 ]] ; do
+				LOG red "Opkg currently locked by a process. Waiting..."
+				sleep 5
+				count=$((count + 1))
+			done
+			# Check WiFi Client Mode enabled
+			count=1 # Number of packets to send
+			timeout=3 # Seconds to wait for a response
+			if ping -c $count -w $timeout "8.8.8.8" > /dev/null 2>&1; then
+				LOG "Network connection is active..."
+				LOG "Running 'opkg update'"
+				LOG "Please wait..."
+				# opkg update && opkg install grep
+				if opkg update; then
+					LOG green "'opkg update' successful."
+					if [[ "$grepCheck" -eq 0 ]]; then
+						LOG "Installing GNU grep..."
+						LOG "Please wait..."
+						opkg install grep
+					fi
+					if [[ "$evtestCheck" -eq 0 ]]; then
+						LOG "Installing evtest..."
+						LOG "Please wait..."
+						opkg install evtest
+					fi
+					LOG green "Packages installed!"
+				else
+					LOG red "'opkg update' failed. Check network..."
+				fi
+			else
+				LOG red "Network connection is down..."
+			fi
+			LOG blue  "================================================="
+		else
+			ERROR_DIALOG "Dependency not met:
+			
+			Required: $dependText not installed!"
+			LOG red   "===================================== CRITICAL =="
+			LOG red   "== Dependency not met: $dependText"
+			LOG red   "===================================== CRITICAL =="
+			LOG cyan "== Install with ->"
+			LOG "opkg update"
+			LOG "opkg install grep"
+			LOG "opkg install evtest"
+			LOG blue  "================================================="
+			LOG cyan "== Or all in one command ->"
+			LOG "opkg update && opkg install grep && opkg install evtest"
+			LOG blue  "================================================="
+			sleep 1
+			exit 1
+		fi
+	fi
+}
+check_dependencies
 
 # function to kill process if no output found
 timeoutfunction(){
@@ -128,10 +221,6 @@ printf "════════════════════════
 # Confirm Scan
 resp=$(CONFIRMATION_DIALOG "Scan for Ducky Style USB Device?")
 if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
-	#LOG "User CONFIRMED"
-	scan_duckyusb="true"
-fi
-if [ "$scan_duckyusb" = "true" ]; then
 	# remove hid for safety - HID LOCKOUT
 	rmmod usbhid 2>/dev/null || modprobe -r usbhid 2>/dev/null
 	LOG " "
@@ -434,10 +523,6 @@ sleep 1
 # Confirm Scan
 resp=$(CONFIRMATION_DIALOG "Scan for Flipper Style USB Device?")
 if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
-	#LOG "User CONFIRMED"
-	scan_flipperusb="true"
-fi
-if [ "$scan_flipperusb" = "true" ]; then
 	# remove hid for safety - HID LOCKOUT
 	rmmod usbhid 2>/dev/null || modprobe -r usbhid 2>/dev/null
 	LOG " "
