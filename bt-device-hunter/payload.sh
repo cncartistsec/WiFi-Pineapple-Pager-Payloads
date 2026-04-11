@@ -286,12 +286,15 @@ reset_bt_adapter() {
 	# sleep 0.2; rmmod btusb; sleep 0.2; modprobe btusb; sleep 0.2
 	sleep 0.5
 	while true; do
-		# hciconfig "$BLE_IFACE" up		
+		# hciconfig "$BLE_IFACE" up
 		if ! hciconfig "$BLE_IFACE" up 2>/dev/null; then
 			sleep 0.5
 			# LOG red "Interface DOWN!: $BLE_IFACE"
+			# LOG red "Resetting"
+			hciconfig "$BLE_IFACE" reset 2>/dev/null
+			sleep 1.5
 			# LOG red "Trying to bring back up..."
-			hciconfig "$BLE_IFACE" up
+			hciconfig "$BLE_IFACE" up 2>/dev/null
 			sleep 0.5
 		else
 			# LOG green "Interface UP!: $BLE_IFACE"
@@ -603,6 +606,7 @@ device_hunter() {
 			s/Apple, Inc./Apple/; 
 			s/Aruba Networks/Aruba HP/; 
 			s/August Home, Inc/August Home/; 
+			s/Automotive Data Solutions Inc/Automotive Data Solutions/; 
 			s/Bestechnic(Shanghai),Ltd/Bestechnic/; 
 			s/Bluetrum Technology Co.,Ltd/Bluetrum/; 
 			s/Bose Corporation/Bose/; 
@@ -612,6 +616,7 @@ device_hunter() {
 			s/Ericsson Technology Licensing/Ericsson/; 
 			s/Etekcity Corporation/Etekcity/; 
 			s/Facebook, Inc./Facebook/; 
+			s/Fugoo, Inc./Fugoo/; 
 			s/Garmin International, Inc./Garmin/; 
 			s/GD Midea Air-Conditioning Equipment Co., Ltd./Midea AC/; 
 			s/GoPro, Inc./GoPro/; 
