@@ -1,6 +1,9 @@
 # WiFi-Pineapple-Pager-Payloads
 Hak5 WiFi Pineapple Pager Payloads by cncartist
 
+The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager) includes all of these Bluetooth tools in one payload and will receive more frequent updates.
+
+
 # Bluetooth Device Hunter (bt-device-hunter)
 ![Bluetooth Device Hunter](images/BT-device-hunter.jpg)
 
@@ -15,6 +18,11 @@ Bluetooth MAC Address Changer for USB CSR8510 / CSR v4.0 Bluetooth Adapter.  Too
 
 # Bluetooth Config Discov/Name (bt-cfg-tool)
 Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can change both USB + Internal Settings.
+
+
+
+# Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner (bt-pineflipkill-scan)
+WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Use Pagers USB A port for bluetooth, not USB C.
 
 
 
