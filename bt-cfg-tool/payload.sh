@@ -4,6 +4,11 @@
 # Description: Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can change both USB + Internal Settings.
 
 # Check for required tools
+if ! command -v hciconfig &> /dev/null; then
+    ERROR_DIALOG "hciconfig not installed"
+    LOG red "Install with: opkg update && opkg install bluez-utils"
+    exit 1
+fi
 if ! command -v bluetoothctl &> /dev/null; then
     ERROR_DIALOG "bluetoothctl not installed"
     LOG red "Install with: opkg update && opkg install bluez-utils"
