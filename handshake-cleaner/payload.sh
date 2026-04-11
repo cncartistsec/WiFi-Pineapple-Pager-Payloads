@@ -1,7 +1,7 @@
 #!/bin/bash
 # Title: Handshake Cleaner
 # Author: cncartist
-# Description: Clears/Deletes Handshakes matching SSID
+# Description: Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
 # Category: csec/general
 # 
 # Acknowledgements: 
