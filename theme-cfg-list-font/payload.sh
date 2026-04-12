@@ -4,6 +4,11 @@
 # Description: Changes files relating to list picker font size to be smaller by default, can return back to default.  Theme needs to be reloaded after changing to apply.
 # Category: csec/general
 # 
+# ============================================
+# Acknowledgements: 
+# ============================================+ 
+# Zombie UFO Theme - Author: Zombie Joe - (theme + support)
+# 
 #  -- Menu Display / Smaller Font Size for List Picker:
 #  -- -- -- changed text_size to small and max_chars to 38/40
 #  -- -- -- "text_size": "small"  &  "max_chars": 38  &  "max_chars": 40
