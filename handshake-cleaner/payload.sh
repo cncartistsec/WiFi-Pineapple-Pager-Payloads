@@ -18,11 +18,106 @@ declare -A SSID_NAMES
 declare -A SSID_UNIQS
 
 # Check for required tools
-if ! command -v aircrack-ng &> /dev/null; then
-    ERROR_DIALOG "aircrack-ng not installed"
-    LOG red "Install with: opkg update && opkg install aircrack-ng"
-    exit 1
-fi
+check_dependencies() {
+	# ORIGINAL <root> grep -V
+	# grep: unrecognized option: V
+	# BusyBox v1.36.1 (2025-04-13 16:38:32 UTC) multi-call binary.
+	# 
+	# NEW <root> grep -V
+	# grep (GNU grep) 3.11
+	local aircrackCheck=0; local grepCheck=0; local count=0; local limit=3; local substring="BusyBox v"; local substring2='grep (GNU grep)'
+	# check aircrack-ng
+	if command -v aircrack-ng &> /dev/null; then
+		aircrackCheck=1
+	fi
+	# check grep
+	while IFS= read -r line && [[ "$count" -lt "$limit" ]] ; do
+		if [[ "$line" == *"$substring2"* ]]; then
+			# LOG "Grep is GNU version"
+			grepCheck=1
+		fi
+		count=$((count + 1))
+	done < <(
+		grep -V
+	)
+	if [[ "$grepCheck" -eq 0 || "$aircrackCheck" -eq 0 ]]; then
+		local dependText=""
+		# ask if they want to install now
+		if [[ "$grepCheck" -eq 0 ]]; then
+			dependText="GNU grep"
+		fi
+		if [[ "$aircrackCheck" -eq 0 ]]; then
+			if [[ -n "$dependText" ]]; then
+				dependText="${dependText} & aircrack-ng"
+				# dependText="GNU grep & aircrack-ng"
+			else
+				dependText="aircrack-ng"
+			fi
+		fi
+		resp=$(CONFIRMATION_DIALOG "Dependency not met!
+		
+		Required: $dependText
+		
+		Install automatically now?")
+		if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+			LOG blue  "================================================="
+			LOG "Starting package install..."
+			sleep 1
+			count=0
+			while [[ -f "/var/lock/opkg.lock" ]] && [[ "$count" -lt 3 ]] ; do
+				LOG red "Opkg currently locked by a process. Waiting..."
+				sleep 5
+				count=$((count + 1))
+			done
+			# Check WiFi Client Mode enabled
+			count=1 # Number of packets to send
+			timeout=3 # Seconds to wait for a response
+			if ping -c $count -w $timeout "8.8.8.8" > /dev/null 2>&1; then
+				LOG "Network connection is active..."
+				LOG "Running 'opkg update'"
+				LOG "Please wait..."
+				# opkg update && opkg install grep
+				if opkg update; then
+					LOG green "'opkg update' successful."
+					if [[ "$grepCheck" -eq 0 ]]; then
+						LOG "Installing GNU grep..."
+						LOG "Please wait..."
+						opkg install grep
+					fi
+					if [[ "$aircrackCheck" -eq 0 ]]; then
+						LOG "Installing aircrack-ng..."
+						LOG "Please wait..."
+						opkg install aircrack-ng
+					fi
+					LOG green "Packages installed!"
+				else
+					LOG red "'opkg update' failed. Check network..."
+				fi
+			else
+				LOG red "Network connection is down..."
+			fi
+			LOG blue  "================================================="
+		else
+			ERROR_DIALOG "Dependency not met:
+			
+			Required: $dependText not installed!"
+			LOG red   "===================================== CRITICAL =="
+			LOG red   "== Dependency not met: $dependText"
+			LOG red   "===================================== CRITICAL =="
+			LOG cyan "== Install with ->"
+			LOG "opkg update"
+			LOG "opkg install grep"
+			LOG "opkg install aircrack-ng"
+			LOG blue  "================================================="
+			LOG cyan "== Or all in one command ->"
+			LOG "opkg update && opkg install grep && opkg install aircrack-ng"
+			LOG blue  "================================================="
+			sleep 1
+			exit 1
+		fi
+	fi
+}
+check_dependencies
 
 cleanup() {
     killall -9 'aircrack-ng' 2>/dev/null
@@ -88,16 +183,32 @@ function select_ssid_delete() {
 		LOG magenta "Building SSID list, please wait..."
 		LOG magenta "This may take some time..."
 		LOG " "
-
+		
+		# file="/root/loot/handshakes/handshake.pcap"
+		# aircrack-ng "${file}"
+		# aircrack installed in mmc, but threw error for .so file and reinstalled on root
+		# bash: /mmc/usr/bin/aircrack-ng: No such file or directory
+		# ln -s /usr/bin/aircrack-ng /mmc/usr/bin/aircrack-ng
+		
+		
+		# original, doesn't capture spaces
+		# aircrack-ng "${file}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk '{print $3}' | head -1
+		# updated, captures spaces
+		# aircrack-ng "${file}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk -F '  ' '{print $4}' | head -1
 		local count=1
 		local SSIDCUR=" "
 		local SSIDSEL=" "
+		local LIST_STR=""
 		for d in "${files[@]}"; do
-			SSIDCUR=$(aircrack-ng "${d}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk '{print $3}' | head -1)
-			LIST_STR="${LIST_STR}${count}: SSID: ${SSIDCUR}
-	"
-			SSID_NAMES[$SSIDCUR]="$(basename ${d})"
-			count=$((count + 1))
+			# LOG "file: ${d}"
+			SSIDCUR=$(aircrack-ng "${d}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk -F '  ' '{print $4}' | head -1)
+			# LOG "SSIDCUR: $SSIDCUR"
+			if [[ -n "$SSIDCUR" ]] ; then
+				LIST_STR="${LIST_STR}${count}: SSID: ${SSIDCUR}
+		"
+				SSID_NAMES["$SSIDCUR"]="$(basename ${d})"
+				count=$((count + 1))
+			fi
 		done
 		local countunique=${#SSID_NAMES[@]}
 		LOG "Found $countunique Unique SSID's:"
@@ -179,7 +290,7 @@ function select_ssid_delete() {
 				LOG " "
 				count=0
 				for d in "${files[@]}"; do
-					SSIDCUR=$(aircrack-ng "${d}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk '{print $3}' | head -1)
+					SSIDCUR=$(aircrack-ng "${d}" 2>/dev/null | grep -P "(?<=\().*(?=\))" | awk -F '  ' '{print $4}' | head -1)
 					if [[ "$SSIDCUR" == "$SSIDCHECK" ]]; then
 						filename_with_ext="$(basename ${d})"
 						filename="${filename_with_ext%.*}"
