@@ -1,7 +1,7 @@
 #!/bin/bash
 # Title: Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner
 # Author: cncartist
-# Description: WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Use Pagers USB A port for bluetooth, not USB C.
+# Description: WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
 # Category: csec/recon
 # 
 # Acknowledgements: 
