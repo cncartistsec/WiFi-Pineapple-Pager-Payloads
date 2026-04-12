@@ -1,7 +1,7 @@
 # WiFi-Pineapple-Pager-Payloads
 Hak5 WiFi Pineapple Pager Payloads by cncartist
 
-The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager) includes all of these Bluetooth tools in one payload and will receive more frequent updates.
+The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager) includes all of the below Bluetooth tools in one payload and will receive more frequent updates.
 
 
 # Bluetooth Device Hunter (bt-device-hunter)
@@ -48,3 +48,14 @@ Lists and Turns All Enabled Alerts Off.  Asks before turning off and shows count
 
 # Handshake Cleaner (handshake-cleaner)
 Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
+
+
+
+# Theme Config - List Font Size (theme-cfg-list-font)
+![Theme Config - List Font Size](images/theme-cfg-list.jpg)
+
+Changes files relating to list picker font size to be smaller by default, can return back to default.  Theme needs to be reloaded after changing to apply.
+
+Comparing font sizes for list picker:
+![Theme Config - Compare Size](images/theme-cfg-list-compare.jpg)
+
