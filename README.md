@@ -17,7 +17,7 @@ Bluetooth MAC Address Changer for USB CSR8510 / CSR v4.0 Bluetooth Adapter.  Too
 
 
 # Bluetooth Config Discov/Name (bt-cfg-tool)
-Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can change both USB + Internal Settings.
+Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Allows scanning with external USB Bluetooth adapter.
 
 
 
