@@ -2,7 +2,7 @@
 # Title: Theme Config - List Font Size
 # Author: cncartist
 # Description: Changes files relating to list picker font size to be smaller by default, can return back to default.  Theme needs to be reloaded after changing to apply.
-# Category: csec/general
+# Category: general
 # 
 # ============================================
 # Acknowledgements: 
