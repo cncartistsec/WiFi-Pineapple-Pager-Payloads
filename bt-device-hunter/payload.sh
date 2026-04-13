@@ -2,7 +2,7 @@
 # Title: Bluetooth Device Hunter
 # Author: cncartist
 # Description: Bluetooth Device Hunter (Classic + LE combined or separate).  Data builds over time in case name or manufacturer is missed on first scans.  Custom configuration allowed.  Verbose logging / debugging / mute / privacy mode available.
-# Category: csec/recon
+# Category: reconnaissance
 # 
 # Acknowledgements: 
 # Find Hackers - Author: NULLFaceNoCase - (idea and concept for searching BT devices)
