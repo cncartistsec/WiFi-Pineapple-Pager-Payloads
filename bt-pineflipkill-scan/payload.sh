@@ -2,7 +2,7 @@
 # Title: Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner
 # Author: cncartist
 # Description: WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
-# Category: csec/recon
+# Category: reconnaissance
 # 
 # Acknowledgements: 
 # Find Hackers - Author: NULLFaceNoCase - (idea and concept for searching BT devices)
