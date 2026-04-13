@@ -2,7 +2,7 @@
 # Title: Handshake Cleaner
 # Author: cncartist
 # Description: Clears/Deletes Handshakes matching SSID, helpful to clean out unwanted SSIDs.
-# Category: csec/general
+# Category: general
 # 
 # Acknowledgements: 
 # Interactive Handshake Cracker - Author: sinX - (code concepts)
