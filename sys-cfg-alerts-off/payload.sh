@@ -2,7 +2,7 @@
 # Title: Disable All Alerts
 # Author: cncartist
 # Description: Lists and Turns All Enabled Alerts Off.  Asks before turning off and shows count/names.
-# Category: csec/general
+# Category: general
 
 # ---- CONFIG ----
 ALERT_DIR="/root/payloads/alerts/"
