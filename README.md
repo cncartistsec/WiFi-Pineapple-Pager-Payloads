@@ -17,12 +17,12 @@ Bluetooth MAC Address Changer for USB CSR8510 / CSR v4.0 Bluetooth Adapter.  Too
 
 
 # Bluetooth Config Discov/Name (bt-cfg-tool)
-Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Allows scanning with external USB Bluetooth adapter.
+Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can change both USB + Internal Settings.
 
 
 
 # Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner (bt-pineflipkill-scan)
-WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Use Pagers USB A port for bluetooth, not USB C.
+WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
 
 
 
