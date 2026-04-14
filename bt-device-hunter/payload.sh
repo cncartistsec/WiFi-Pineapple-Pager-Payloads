@@ -481,7 +481,7 @@ device_hunter() {
 			LED BLUE SLOW
 			# LOG red "hcitool"
 			# (hcitool -i "$BLE_IFACE" lescan) &
-			(timeout --signal=SIGINT "${DATA_SCAN_SECONDS}s" hcitool -i "$BLE_IFACE" scan) &
+			(timeout --signal=SIGINT "${DATA_SCAN_SECONDS}s" hcitool -i "$BLE_IFACE" scan --length=$DATA_SCAN_SECONDS) &
 			# LOG red "sleep"
 			# sleep $((DATA_SCAN_SECONDS + 1))
 			sleep ${DATA_SCAN_SECONDS}
@@ -489,7 +489,6 @@ device_hunter() {
 				reset_bt_adapter
 			fi
 		fi
-		
 		if [[ "$scan_btle" == "true" ]] ; then
 			LED CYAN SLOW
 			#run le scan second	
