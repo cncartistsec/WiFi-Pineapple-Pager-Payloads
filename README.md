@@ -24,6 +24,8 @@ Bluetooth Discoverable Setting Changer + Bluetooth Hardware Name Changer.  Can c
 
 
 # Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner (bt-pineflipkill-scan)
+![Bluetooth PineFlipKill Poster](images/pineflip-poster.jpg)
+
 WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
 
 
@@ -41,6 +43,10 @@ Outputs (ascii art + powershell):
 
 ![Output 2](images/USB%20ducky%20powershell%20output.PNG)
 
+
+
+# USB Enable Storage Devices / Mass Media
+Tool will create hotplug file that enables mass media/USB storage devices for Pager, or allow it to be removed.  Devices will be mounted to /usb/ by default and no reboot is required.  Thanks to dark_pyrro for research and documentation on the fix.
 
 
 # Disable All Alerts (sys-cfg-alerts-off)
