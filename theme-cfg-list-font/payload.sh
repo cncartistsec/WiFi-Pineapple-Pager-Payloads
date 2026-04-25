@@ -90,6 +90,17 @@ if [[ "$themeFileExists" -eq 1 ]] ; then
 				LOG blue "================================================="
 				LOG "Please reload your theme for the changes to take effect!"
 				LOG blue "================================================="
+				sleep 1				
+				resp=$(CONFIRMATION_DIALOG "Do you want to Reload your Current Theme (${themename}) Now?
+
+				This will restart the Pagers UI.")
+				if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+					# Do you want to reload now?
+					LOG "Reloading UI..."
+					LOG "Please wait..."
+					LOG " "
+					service pineapplepager restart
+				fi
 			else
 				LOG red "Theme update error!"
 			fi
@@ -134,6 +145,17 @@ if [[ "$themeFileExists" -eq 1 ]] ; then
 					LOG blue "================================================="
 					LOG "Please reload your theme for the changes to take effect!"
 					LOG blue "================================================="
+					sleep 1				
+					resp=$(CONFIRMATION_DIALOG "Do you want to Reload your Current Theme (${themename}) Now?
+
+					This will restart the Pagers UI.")
+					if [[ "$resp" == "$DUCKYSCRIPT_USER_CONFIRMED" ]] ; then
+						# Do you want to reload now?
+						LOG "Reloading UI..."
+						LOG "Please wait..."
+						LOG " "
+						service pineapplepager restart
+					fi
 				else
 					LOG red "Theme update error!"
 				fi
