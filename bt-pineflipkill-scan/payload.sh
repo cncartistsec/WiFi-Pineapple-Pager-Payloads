@@ -1,7 +1,7 @@
 #!/bin/bash
 # Title: Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner
 # Author: cncartist
-# Description: WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
+# Description: WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter and GPS coordinate logging.
 # Category: reconnaissance
 # 
 # Acknowledgements: 
@@ -22,6 +22,7 @@ DATASTREAMBTTMP_FILE="$LOOT_DIR/DataBTTMP_${TIMESTAMP}.txt"
 scan_BT_FLIPPERS="false"
 scan_BT_USBKILLS="false"
 scan_BT_PINEAPPS="false"
+gpspos_last=""
 
 # ---- BLE ----
 BLE_IFACE="hci0"
@@ -533,6 +534,9 @@ wifipine_search_bt() {
 
 # detection scans
 scan_detection() {
+	/etc/init.d/gpsd reload 2>/dev/null
+	/etc/init.d/gpsd restart 2>/dev/null
+	
 	# ---- DEFAULTS ----
 	local detections=0
 	
@@ -573,6 +577,17 @@ scan_detection() {
 			declare -A BT_PINEAPPS
 			# declare -A BT_NAMES
 			# declare -A BT_COMPS
+			
+			# gps check
+			gpspos_cur=$(GPS_GET)
+			if [[ "$gpspos_cur" != "0 0 0 0" ]] ; then
+				gpspos_last="$gpspos_cur" # GPS is valid
+				printf "GPS Pos.: %s\n" "${gpspos_last}" >> "$REPORT_DETECT_FILE"
+			else
+				if [[ -n "$gpspos_last" ]] ; then # gps lost, last known coordinates: gpspos_last
+					printf "GPS LOST! %s (Last Known Pos.)\n" "${gpspos_last}" >> "$REPORT_DETECT_FILE"
+				fi
+			fi
 			
 			if [[ "$scan_BT_PINEAPPS" == "true" ]] ; then
 				LED BLUE SLOW
@@ -710,7 +725,6 @@ scan_detection() {
 			printf "Scanning again...\n\n" >> "$REPORT_DETECT_FILE"
 		done
 		
-
 		# finished
 		LED MAGENTA
 		LOG green "Scans Completed!"
