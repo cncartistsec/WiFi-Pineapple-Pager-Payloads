@@ -1,5 +1,5 @@
 # WiFi-Pineapple-Pager-Payloads
-# Bluetooth Scanning + Tools, USB Ducky Data Stream Capture, Disable All Alerts, Handshake Cleaner, USB Enable Storage Devices, and Theme Config.  For Hak5 WiFi Pineapple Pager.
+# Bluetooth Scanning + Tools, USB Ducky Data Stream Capture, GPS NMEA Android Mgmt AP, Disable All Alerts, Handshake Cleaner, USB Enable Storage Devices, and Theme Config.  For Hak5 WiFi Pineapple Pager.
 
 The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager) includes all of the below Bluetooth Scanners + Tools in one payload and will receive more frequent updates.  The Bluetooth payloads below are a sample of the individual tools/payloads in [BluePine](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager).
 
@@ -36,6 +36,13 @@ Detects & Locates Bluetooth Jammers/Interference Devices within close range.  Re
 ![Bluetooth PineFlipKill Poster](images/pineflip-poster.jpg)
 
 WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
+
+
+
+# GPS Mgmt AP NMEA UDP Port 9999 (gps-mgmtap-nmea)
+![GPS Mgmt AP NMEA](images/gps-mgmtap.jpg)
+
+Turn your phone into your GPS for the Pager with minimal effort!  Allows stop/start of UDP Port 9999 NMEA GPS data collection for the Pager.  Can use Android app gpsdRelay, C5 Wardriver, or similar GPS relaying apps/devices to relay NMEA information to the gpsd server UDP Port 9999 on the Pagers Management AP.  This allows NMEA information to be passed to the device from any NMEA source on the Pagers Mgmt AP sending UDP NMEA data to UDP Port 9999.  It can take some time until data starts being received, and that relies on the phone/sending devices GPS signal.
 
 
 
