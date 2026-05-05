@@ -1,7 +1,7 @@
 #!/bin/bash
 # Title: GPS Mgmt AP NMEA UDP Port 9999
 # Author: cncartist
-# Description: Turn your phone into your GPS for the Pager with minimal effort!  Allows stop/start of UDP Port 9999 NMEA GPS data collection for the Pager.  Can use Android app gpsdRelay, C5 Wardriver, or similar GPS relaying apps/devices to relay NMEA information to the gpsd server UDP Port 9999 on the Pagers Management AP.  This allows NMEA information to be passed to the device from any NMEA source on the Pagers Mgmt AP sending UDP NMEA data to UDP Port 9999.  It can take some time until data starts being received, and that relies on the phone/sending devices GPS signal.
+# Description: Turn your phone into your GPS for the Pager with minimal effort!  Allows stop/start of UDP Port 9999 NMEA GPS data collection for the Pager.  Can use Android app gpsdRelay, iPhone NMEA Send Location App, C5 Wardriver, or similar GPS relaying apps/devices to relay NMEA information to the gpsd server UDP Port 9999 on the Pagers Management AP.  This allows NMEA information to be passed to the device from any NMEA source on the Pagers Mgmt AP sending UDP NMEA data to UDP Port 9999.  It can take some time until data starts being received, and that relies on the phone/sending devices GPS signal.
 # Category: general
 # 
 # ============================================
@@ -10,6 +10,7 @@
 # repins762 - https://github.com/repins762 - (idea)
 # mobile2gps (https://github.com/ryanpohlner/mobile2gps/tree/main) - Author: Ryan Pohlner (@Spectracide on Discord) - (insight)
 # gpsdRelay (https://f-droid.org/packages/io.github.project_kaat.gpsdrelay/) - Author: project-kaat (Android Relay)
+# NMEA Send Location App (https://apps.apple.com/us/app/nmea-send-location/id6749798097) - Author: Alexey Matveev (iPhone Relay)
 # 
 # ============================================
 # Notes:
