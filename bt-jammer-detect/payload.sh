@@ -7,7 +7,7 @@
 # ============================================
 # Notes:
 # ============================================
-# "Jam" counter resets every 25 "nojams" to clean out errors, and the "Found" counter will only count true confirmed jams in the area.  Confirmed jams are calculated at 5 jams per 25 scans.  A sequential jam is accounted for and more severe, meaning you are closer to the jammer/interference device.  This method may not work with certain Bluetooth dongles or setups and has only been confirmed to work with a USB CSR8510 / CSR v4.0 Bluetooth Adapter on the Pager.
+# "Jam" counter resets every 25 "nojams" to clean out errors, and the "Found" counter will only count true confirmed jams in the area.  Confirmed jams are calculated at 5 jams per 25 scans.  A sequential jam is accounted for and more severe, meaning you are closer to the jammer/interference device.  This method may not work with certain Bluetooth dongles or setups and has only been confirmed to work with a USB CSR8510 / CSR v4.0 Bluetooth Adapter on the Pager.  Includes GPS coordinate logging if GPS device enabled.
 # 
 
 # ---- CONFIG ----
@@ -18,11 +18,13 @@ REPORT_DETJAM_FILE="$LOOT_DIR/Report_Jam_${TIMESTAMP}.txt"
 KEYCKTMP_FILE="$LOOT_DIR/JamKeyCkTmp.txt"
 # temp_devname="Apple Apple Test Long Name Apple"
 
-cancel_app=0
 total_scans=0
 total_detected=0
 scan_mute="false"
 scan_stealth=0
+# set on each total run
+cancel_app=0
+gpspos_last=""
 
 # Check for required tools
 check_dependencies() {
@@ -104,9 +106,12 @@ start_evtest() {
 
 
 detect_jammers() {
+	/etc/init.d/gpsd reload 2>/dev/null
+	/etc/init.d/gpsd restart 2>/dev/null
+	
 	# possible cleanup from last run
 	rm "$KEYCKTMP_FILE" 2>/dev/null
-	killall evtest 2>/dev/null
+	killall evtest 2>/dev/null	
 	
 	# name to be used for device to be pinged
 	local temp_devname="Apple"
@@ -486,6 +491,16 @@ detect_jammers() {
 			
 			printf "════════════════════════════════════════════\n" >> "$REPORT_DETJAM_FILE"
 			printf "%s - EVENT: Start scan\n" $(date +"%Y-%m-%d_%H%M%S") >> "$REPORT_DETJAM_FILE"
+			# gps check
+			gpspos_cur=$(GPS_GET)
+			if [[ "$gpspos_cur" != "0 0 0 0" ]] ; then
+				gpspos_last="$gpspos_cur" # GPS is valid
+				printf "GPS Pos.: %s\n" "${gpspos_last}" >> "$REPORT_DETJAM_FILE"
+			else
+				if [[ -n "$gpspos_last" ]] ; then # gps lost, last known coordinates: gpspos_last
+					printf "GPS LOST! %s (Last Known Pos.)\n" "${gpspos_last}" >> "$REPORT_DETJAM_FILE"
+				fi
+			fi
 			printf "════════════════════════════════════════════\n" >> "$REPORT_DETJAM_FILE"
 
 
@@ -661,6 +676,16 @@ detect_jammers() {
 						LOG red     "-- JAMMED! ---- Jammer CONFIRMED! ----- JAMMED! --"
 					fi
 					LOG blue "--------------------------------------------------"
+					# gps check
+					gpspos_cur=$(GPS_GET)
+					if [[ "$gpspos_cur" != "0 0 0 0" ]] ; then
+						gpspos_last="$gpspos_cur" # GPS is valid
+						printf "GPS Pos.: %s\n" "${gpspos_last}" >> "$REPORT_DETJAM_FILE"
+					else
+						if [[ -n "$gpspos_last" ]] ; then # gps lost, last known coordinates: gpspos_last
+							printf "GPS LOST! %s (Last Known Pos.)\n" "${gpspos_last}" >> "$REPORT_DETJAM_FILE"
+						fi
+					fi
 					printf "%s - EVENT: Jammer Detected!\n" $(date +"%Y-%m-%d_%H%M%S") >> "$REPORT_DETJAM_FILE"
 					jammerDet=$((jammerDet+1))
 					total_detected=$((total_detected + 1))
@@ -692,8 +717,8 @@ detect_jammers() {
 				if [[ "$scan_mute" == "false" ]] ; then
 					RINGTONE "warning"
 				fi
-				LOG red "Jammers detected: $jammerDet"
-				printf "%s bluetooth Jammers found\n" "${jammerDet}" >> "$REPORT_DETJAM_FILE"
+				LOG red "Jammer(s) detected: $jammerDet"
+				printf "%s Bluetooth Jammer(s) found\n" "${jammerDet}" >> "$REPORT_DETJAM_FILE"
 			else
 				if [[ "$scan_stealth" -eq 0 ]] ; then LED MAGENTA; fi
 				LOG green "No Jammers detected, all clear!"
