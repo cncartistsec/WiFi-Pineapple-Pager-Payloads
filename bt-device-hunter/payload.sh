@@ -1,7 +1,7 @@
 #!/bin/bash
 # Title: Bluetooth Device Hunter
 # Author: cncartist
-# Description: Bluetooth Device Hunter (Classic + LE combined or separate).  Data builds over time in case name or manufacturer is missed on first scans.  Custom configuration allowed.  Verbose logging / debugging / mute / privacy mode available.
+# Description: Bluetooth Device Hunter (Classic + LE combined or separate).  Data builds over time in case name or manufacturer is missed on first scans.  Custom configuration allowed.  Verbose logging / debugging / mute / privacy mode available.  Includes GPS coordinate logging if GPS device enabled.
 # Category: reconnaissance
 # 
 # Acknowledgements: 
@@ -14,7 +14,7 @@
 #  -- Bluetooth Device Hunter (Classic + LE combined or separate).
 #  -- -- -- RSSI meter for each found signal, best signal showing at the bottom of the screen.
 #  -- -- -- Custom configuration allowed and data builds over time in case name or manufacturer is missed on first scans.
-#  -- -- -- Verbose logging / debugging available.
+#  -- -- -- Verbose logging / debugging available, GPS coordinate logging if GPS device enabled.
 #  -- Privacy / Streamer Mode:
 #  -- -- -- (obscures MAC + Targets/Device Names) allows full functionality while obscuring ALL identifying information on screen.
 #  -- Debug Mode:
@@ -51,7 +51,9 @@
 #  -- Bluetooth: 
 #  -- -- -- If you boot up the pager with USB bluetooth plugged in, it may reverse the hci addressing.
 #  -- -- -- -- - Please boot the pager WITHOUT a USB device connected for hci0 to be addressed as the first default device.
-#  -- Debug / Logging: 
+#  -- Debug / Logging:
+#  -- -- -- Includes GPS coordinate logging if GPS device enabled.
+#  -- -- -- -- - When GPS device enabled, Device Hunter Scan will show 'NoGPS' or '+GPS+' depending on GPS status.
 #  -- -- -- With debug enabled, log files will add up quickly over time in filesize.
 #  -- -- -- -- - Please take care to only debug when needed; it keeps full BT scan LOG files which take significant space.
 # 
@@ -87,6 +89,7 @@ cancel_app=0
 scan_privacy=0
 priv_name_txt="-+ Name Hidden +-"
 rssitxt_switch="rssitxtsw_hci0"
+gpspos_last=""
 
 # ---- REGEX ----
 VALID_MAC="([0-9A-Fa-f]{2}:){5}[0-9A-Fa-f]{2}"
@@ -410,6 +413,9 @@ rssitxtsw_hci1() {
 
 # device hunter function
 device_hunter() {
+	/etc/init.d/gpsd reload 2>/dev/null
+	/etc/init.d/gpsd restart 2>/dev/null
+	
 	local scannumber=0
 	local founditems=0
 	local pattern1="Address:"
@@ -417,6 +423,7 @@ device_hunter() {
 	local pattern3="Service Data:"
 	local pattern4="RSSI:"
 	local pattern5="Name \(complete\):"
+	local gps_disptxt=""
 
 	printf "═══════════════════════════════════════════════════════════════\n" > "$REPORT_FILE"
 	printf "  Bluetooth Device Hunter Scan\n" >> "$REPORT_FILE"
@@ -448,8 +455,18 @@ device_hunter() {
 	LOG " "
 	LOG "Scanning... Press BACK to stop."
 	
+	# first check to set header
+	gpspos_cur=$(GPS_GET)
+	if [[ "$gpspos_cur" != "0 0 0 0" ]] ; then
+		gpspos_last="$gpspos_cur"; gps_disptxt=' +GPS+' # GPS is valid
+	else
+		if [[ -n "$gpspos_last" ]] ; then
+			gps_disptxt=' NoGPS' # gps lost, last known coordinates: gpspos_last
+		fi
+	fi
+	
 	LOG blue "-------------------------------------------"
-	LOG cyan "|- Signal -| -- MAC Address -- - Name/Manuf"
+	LOG cyan "|- Signal -| -- MAC Address -- - Name/Manuf${gps_disptxt}"
 	LOG blue "-------------------------------------------"
 	
 	while true; do
@@ -472,6 +489,21 @@ device_hunter() {
 				
 		printf "════════════════════════════════════════════\n" >> "$REPORT_FILE"
 		printf "%s - EVENT: Start scan #%s\n" "$(date +"%Y-%m-%d_%H%M%S")" "${scannumber}" >> "$REPORT_FILE"
+		
+		# set on each run
+		gps_disptxt=""; gpspos_cur=$(GPS_GET)
+		if [[ "$gpspos_cur" != "0 0 0 0" ]] ; then
+			# GPS is valid
+			gpspos_last="$gpspos_cur"; gps_disptxt=' +GPS+'
+			printf "GPS Pos.: %s\n" "${gpspos_last}" >> "$REPORT_FILE"
+		else
+			if [[ -n "$gpspos_last" ]] ; then
+				# gps lost, last known coordinates: gpspos_last
+				gps_disptxt=' NoGPS'
+				printf "GPS LOST! %s (Last Known Pos.)\n" "${gpspos_last}" >> "$REPORT_FILE"
+			fi
+		fi
+		
 		# LOG red "btmon"
 		# (btmon &> "$DATASTREAMBTTMP_FILE") &
 		(timeout --signal=SIGINT "$((DATA_SCAN_SECONDS*2+7))s" btmon &> "$DATASTREAMBTTMP_FILE") &
@@ -483,7 +515,6 @@ device_hunter() {
 			# (hcitool -i "$BLE_IFACE" lescan) &
 			(timeout --signal=SIGINT "${DATA_SCAN_SECONDS}s" hcitool -i "$BLE_IFACE" scan --length=$DATA_SCAN_SECONDS) &
 			# LOG red "sleep"
-			# sleep $((DATA_SCAN_SECONDS + 1))
 			sleep ${DATA_SCAN_SECONDS}
 			if [[ "$scan_btle" == "true" ]] ; then
 				reset_bt_adapter
@@ -592,7 +623,7 @@ device_hunter() {
 			
 			# fix for reading too far ahead and skipping items # remove whitespace and tabs
 			sed -i -e 's/^[[:space:]]*//' -e '/^[[:space:]]*$/d' "$DATASTREAMBT_FILE"
-			
+		
 			# string shortening for device display # fix mfr/company names
 			sed -i '
 			s/Acuity Brands Lighting, Inc/Acuity/; 
@@ -605,6 +636,7 @@ device_hunter() {
 			s/Android Bluedroid/Bluedroid/; 
 			s/Apple, Inc./Apple/; 
 			s/Aruba Networks/Aruba HP/; 
+			s/Audio-Technica Corporation/Audio-Technica/; 
 			s/August Home, Inc/August Home/; 
 			s/Automotive Data Solutions Inc/Automotive Data Solutions/; 
 			s/Bestechnic(Shanghai),Ltd/Bestechnic/; 
@@ -627,12 +659,14 @@ device_hunter() {
 			s/Hatch Baby, Inc./Hatch Baby/; 
 			s/Hewlett-Packard Company/HP/; 
 			s/HP Inc./HP/; 
+			s/Honeywell International Inc./Honeywell/; 
 			s/HUAWEI Technologies Co., Ltd./HUAWEI/; 
 			s/Hubbell Lighting, Inc./Hubbell/; 
 			s/IBM Corp./IBM/; 
 			s/Icon Health and Fitness/iFIT/; 
 			s/InvisionHeart Inc./InvisionHeart/; 
 			s/iRobot Corporation/iRobot/; 
+			s/Keiser Corporation/Keiser/; 
 			s/KiteSpring Inc./KiteSpring/; 
 			s/Klipsch Group, Inc./Klipsch/; 
 			s/Leviton Mfg. Co., Inc./Leviton/; 
@@ -640,7 +674,7 @@ device_hunter() {
 			s/\[LG\] webOS TV/LG webOSTV/; 
 			s/Lippert Components, INC/Lippert/; 
 			s/LumiGeek LLC/LumiGeek/; 
-			s/Nerbio Medical Software Platforms Inc/Nerbio Medical/; 
+			s/Nerbio Medical Software Platforms Inc/Nerbio/; 
 			s/Nest Labs Inc/Nest/; 
 			s/Nikon Corporation/Nikon/; 
 			s/Nintendo Co., Ltd./Nintendo/; 
@@ -650,6 +684,7 @@ device_hunter() {
 			s/Oculus VR, LLC/Oculus/; 
 			s/OnePlus Electronics (Shenzhen) Co., Ltd./OnePlus/; 
 			s/Onset Computer Corporation/Onset/; 
+			s/Otodata Wireless Network Inc./Otodata/; 
 			s/Phillips Connect Technologies LLC/Phillips/; 
 			s/Razer Inc./Razer/; 
 			s/Resmed Ltd/Resmed/; 
@@ -679,8 +714,10 @@ device_hunter() {
 			s/Texas Instruments Inc./TI/; 
 			s/The Chamberlain Group, Inc./Chamberlain/; 
 			s/Tile, Inc./Tile/; 
+			s/TomTom International BV/TomTom/; 
 			s/Toshiba Corp./Toshiba/; 
 			s/Trimble Navigation Ltd./Trimble/; 
+			s/Ubiquitous Computing Technology Corporation/Ubiquitous/; 
 			s/Valve Corporation/Valve/; 
 			s/Victron Energy BV/Victron/; 
 			s/Vizio, Inc./Vizio/; 
@@ -927,7 +964,7 @@ device_hunter() {
 		printf "%s bluetooth signals found\n" "${founditems}" >> "$REPORT_FILE"
 		printf "════════════════════════════════════════════\n" >> "$REPORT_FILE"
 		# LOG blue "-------------------------------------------"
-		LOG cyan   "|- Signal -| -- MAC Address -- - Name/Manuf"
+		LOG cyan   "|- Signal -| -- MAC Address -- - Name/Manuf${gps_disptxt}"
 		
 		printf "%s - EVENT: Finish scan\n" $(date +"%Y-%m-%d_%H%M%S") >> "$REPORT_FILE"
 			
