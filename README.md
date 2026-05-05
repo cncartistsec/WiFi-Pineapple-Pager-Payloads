@@ -1,5 +1,5 @@
 # WiFi-Pineapple-Pager-Payloads
-# Bluetooth Scanning + Tools, USB Ducky Data Stream Capture, GPS NMEA Android Mgmt AP, Disable All Alerts, Handshake Cleaner, USB Enable Storage Devices, and Theme Config.  For Hak5 WiFi Pineapple Pager.
+# Bluetooth Scanning + Tools, USB Ducky Data Stream Capture, GPS Mgmt AP NMEA, Disable All Alerts, Handshake Cleaner, USB Enable Storage Devices, and Theme Config.  For Hak5 WiFi Pineapple Pager.
 
 The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager) includes all of the below Bluetooth Scanners + Tools in one payload and will receive more frequent updates.  The Bluetooth payloads below are a sample of the individual tools/payloads in [BluePine](https://github.com/cncartistsec/BluePine-WiFi-Pineapple-Pager).
 
