@@ -4,4 +4,4 @@ The [BluePine Bluetooth Scanning Suite](https://github.com/cncartistsec/BluePine
 # Bluetooth PineFlipKill - WiFi Pineapple, Flipper, and USB Kill Scanner (bt-pineflipkill-scan)
 ![Bluetooth PineFlipKill Poster](../images/pineflip-poster.jpg)
 
-WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter.
+WiFi Pineapple BT / Flipper Zero / USB Kill BT Scanner.  Allows scanning with external USB Bluetooth adapter and GPS coordinate logging.
